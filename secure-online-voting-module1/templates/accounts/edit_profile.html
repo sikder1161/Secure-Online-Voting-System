@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Edit profile | Secure Voting System{% endblock %}
+{% block topbar_title %}Edit voter profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Voter portal / Account</div><h1 class="page-title">Personal information</h1><p class="page-subtitle">Keep your identity record up to date. Changes are reviewed before approval is restored.</p></div><a class="ui-btn ui-btn-outline" href="{% url 'accounts:dashboard' %}"><svg class="icon"><use href="#i-arrow-left"></use></svg> Back to overview</a></div>
+<div class="form-split">
+  <section class="ui-panel form-panel" aria-labelledby="identity-heading">
+    <h2 id="identity-heading">Edit identity details</h2>
+    <form class="ui-form" method="post" novalidate>
+      {% csrf_token %}
+      {% for error in form.non_field_errors %}<div class="ui-note danger mb-3" role="alert">{{ error }}</div>{% endfor %}
+      <div class="form-grid">
+        {% for field in form %}
+          <div class="form-field {% if field.name == 'department' %}full{% endif %} {% if field.errors %}field-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <input type="{% if field.name == 'date_of_birth' %}date{% else %}text{% endif %}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|date:'Y-m-d'|default:field.value|default_if_none:'' }}" {% if field.field.required %}required{% endif %} {% if field.errors %}aria-invalid="true"{% endif %}>
+            {% if field.help_text %}<span class="form-help">{{ field.help_text|striptags }}</span>{% endif %}
+            {% for error in field.errors %}<span class="form-error" role="alert">{{ error }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+        <div class="form-field full"><label for="institutional_id">Institutional ID</label><input id="institutional_id" value="{{ profile.institutional_id }}" disabled aria-describedby="institutional-help"><span class="form-help" id="institutional-help">This ID is managed by an administrator.</span></div>
+      </div>
+      <div class="form-actions"><button class="ui-btn ui-btn-primary" type="submit"><svg class="icon"><use href="#i-check"></use></svg> Save changes</button><a class="ui-btn ui-btn-outline" href="{% url 'accounts:dashboard' %}">Cancel</a></div>
+    </form>
+  </section>
+  <aside class="stacked-panels" aria-label="Important information">
+    <div class="ui-panel"><div class="panel-head"><div><h2>Verification rules</h2><p>What happens when you edit your identity</p></div></div><div class="panel-body"><div class="timeline"><div class="timeline-item"><span class="timeline-step done"><svg class="icon"><use href="#i-check"></use></svg></span><div><strong>Save your updates</strong><p>Your corrected information is stored in the voter profile.</p></div></div><div class="timeline-item"><span class="timeline-step current">2</span><div><strong>Approval returns to pending</strong><p>Name, department or date-of-birth changes need another administrator review.</p></div></div><div class="timeline-item"><span class="timeline-step">3</span><div><strong>Administrator verifies</strong><p>A reviewer checks your information and the 18+ age rule.</p></div></div></div></div></div>
+    <div class="ui-note warning"><svg class="icon"><use href="#i-alert"></use></svg><span>Editing details can reset your Approved status to Pending. You will not be cleared until an administrator reviews the new details.</span></div>
+  </aside>
+</div>
+{% endblock %}

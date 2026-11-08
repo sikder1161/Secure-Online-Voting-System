@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Admin 2FA verification | Secure Voting System{% endblock %}
+{% block topbar_title %}Administrator security{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">SECURITY / SECOND FACTOR</div><h1 class="page-title">Verify it's you</h1><p class="page-subtitle">Your password was accepted. Enter a code from your authenticator app to access privileged pages.</p></div></div>
+<section class="ui-panel" style="max-width:600px">
+  <div class="panel-head"><div><h2>Authenticator verification</h2><p>6 digits · short-lived · one-time use</p></div><span class="pill pill-indigo">2FA</span></div>
+  <div class="panel-body"><form method="post" class="ui-form" autocomplete="off">{% csrf_token %}
+    <label for="mfa_code">One-time authenticator code</label>
+    <input id="mfa_code" name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus>
+    <div class="form-actions"><button class="ui-btn ui-btn-primary" type="submit">Verify and open dashboard</button></div>
+  </form><div class="ui-note warning mt-4"><span>Lost your authenticator? Contact the system administrator for supervised recovery. Codes cannot be bypassed through a public reset link.</span></div></div>
+</section>
+{% endblock %}

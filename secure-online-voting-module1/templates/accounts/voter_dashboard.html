@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load email_privacy %}
+{% block title %}My Dashboard | Secure Voting System{% endblock %}
+{% block topbar_title %}Voter overview{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">Voter portal / Overview</div><h1 class="page-title">Welcome, {{ user.first_name|default:user.username }} <span aria-hidden="true">👋</span></h1><p class="page-subtitle">Your voter identity, personal information and account security in one place.</p></div>
+  <span class="pill pill-indigo"><svg class="icon"><use href="#i-user"></use></svg> Voter account</span>
+</div>
+
+<section class="dashboard-hero" aria-labelledby="voter-hero-title">
+  <div class="hero-content">
+    <div class="hero-kicker"><svg class="icon"><use href="#i-shield"></use></svg> Voter identity verification</div>
+    {% if not profile %}
+      <h2 id="voter-hero-title">Your profile needs attention</h2><p>We could not find your voter profile. Contact the system administrator before taking the next step.</p>
+    {% elif not profile.date_of_birth %}
+      <h2 id="voter-hero-title">One detail is still missing</h2><p>Add your date of birth so the system can check the 18+ requirement. Changes will be reviewed by an administrator.</p><a class="hero-cta" href="{% url 'accounts:edit_profile' %}">Add date of birth <svg class="icon"><use href="#i-arrow-right"></use></svg></a>
+    {% elif not profile.meets_age_requirement %}
+      <h2 id="voter-hero-title">Your voter account is saved</h2><p>You are currently under 18. Voting access is not available yet; you may keep your account and update your details if needed.</p>
+    {% elif profile.verification_status == 'APPROVED' %}
+      <h2 id="voter-hero-title">Your identity is verified</h2><p>Your administrator approved your identity and your profile meets the 18+ rule. Election-specific eligibility will be checked when Module 2 is added.</p><a class="hero-cta" href="#my-profile">View my profile <svg class="icon"><use href="#i-arrow-right"></use></svg></a>
+    {% elif profile.verification_status == 'REJECTED' %}
+      <h2 id="voter-hero-title">Your verification needs a review</h2><p>Your identity request was not approved. Review your details or contact the election administrator for clarification.</p><a class="hero-cta" href="{% url 'accounts:edit_profile' %}">Review my details <svg class="icon"><use href="#i-arrow-right"></use></svg></a>
+    {% else %}
+      <h2 id="voter-hero-title">You're almost ready</h2><p>Your account is registered and waiting for administrator identity approval. You can review or update your profile while you wait.</p><a class="hero-cta" href="#my-profile">View registration <svg class="icon"><use href="#i-arrow-right"></use></svg></a>
+    {% endif %}
+  </div>
+  <div class="hero-side">
+    <div class="hero-side-label">Identity status</div>
+    <div class="hero-side-value">{% if profile %}{{ profile.get_verification_status_display }}{% else %}Not available{% endif %}</div>
+    <div class="hero-side-row"><span>Age requirement</span><strong>{% if profile and profile.meets_age_requirement %}18+ met{% elif profile and profile.date_of_birth %}Not met{% else %}Needs DOB{% endif %}</strong></div>
+    <div class="hero-side-row"><span>Account type</span><strong>Voter</strong></div>
+  </div>
+</section>
+
+<div class="kpi-grid">
+  <div class="ui-panel kpi"><div class="kpi-header"><div class="kpi-label">Verification status</div><div class="kpi-icon green"><svg class="icon"><use href="#i-shield"></use></svg></div></div><div class="kpi-value has-pill">{% if profile %}{% if profile.verification_status == 'APPROVED' %}<span class="pill pill-success"><svg class="icon"><use href="#i-check"></use></svg> Approved</span>{% elif profile.verification_status == 'REJECTED' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-warning"><svg class="icon"><use href="#i-clock"></use></svg> Pending review</span>{% endif %}{% else %}<span class="pill pill-muted">Not available</span>{% endif %}</div><div class="kpi-desc">Administrator's decision</div></div>
+  <div class="ui-panel kpi"><div class="kpi-header"><div class="kpi-label">Age requirement</div><div class="kpi-icon amber"><svg class="icon"><use href="#i-calendar"></use></svg></div></div><div class="kpi-value">{% if profile and profile.age is not None %}{{ profile.age }} <span style="font-size:13px;color:#9da8bb;font-weight:600">years</span>{% else %}—{% endif %}</div><div class="kpi-desc">{% if profile and profile.meets_age_requirement %}Meets the minimum age of 18{% elif profile and profile.date_of_birth %}Must reach age 18 before voting{% else %}Birth date not yet provided{% endif %}</div></div>
+  <div class="ui-panel kpi"><div class="kpi-header"><div class="kpi-label">Account role</div><div class="kpi-icon"><svg class="icon"><use href="#i-id"></use></svg></div></div><div class="kpi-value" style="font-size:21px">{{ user.get_role_display }}</div><div class="kpi-desc">Access to voter-only tools</div></div>
+  <div class="ui-panel kpi"><div class="kpi-header"><div class="kpi-label">Member since</div><div class="kpi-icon"><svg class="icon"><use href="#i-calendar"></use></svg></div></div><div class="kpi-value" style="font-size:19px">{{ user.date_joined|date:'d M Y' }}</div><div class="kpi-desc">Your registration date</div></div>
+</div>
+
+<div class="dashboard-two-col">
+  <div class="stacked-panels">
+    <section class="ui-panel" id="my-profile" aria-labelledby="profile-title">
+      <div class="panel-head"><div><h2 id="profile-title">My voter profile</h2><p>Personal details attached to this account</p></div>{% if profile and user.role == 'VOTER' %}<a href="{% url 'accounts:edit_profile' %}" class="ui-btn ui-btn-soft"><svg class="icon"><use href="#i-edit"></use></svg> Edit profile</a>{% endif %}</div>
+      <div class="panel-body">
+        <div class="profile-list">
+          <div class="profile-item"><div class="label">Full name</div><div class="value">{{ user.get_full_name|default:user.username }}</div></div>
+          <div class="profile-item"><div class="label">Username</div><div class="value">{{ user.username }}</div></div>
+          <div class="profile-item"><div class="label">Email address</div><div class="value">{{ user.email|mask_email }}</div></div>
+          <div class="profile-item"><div class="label">Institutional ID</div><div class="value">{{ profile.institutional_id|default:'Not available' }}</div></div>
+          <div class="profile-item"><div class="label">Department</div><div class="value">{{ profile.department|default:'Not provided' }}</div></div>
+          <div class="profile-item"><div class="label">Date of birth</div><div class="value">{{ profile.date_of_birth|date:'d M Y'|default:'Not provided' }}</div></div>
+          <div class="profile-item"><div class="label">Last sign in</div><div class="value">{{ user.last_login|date:'d M Y, h:i A'|default:'Not recorded' }}</div></div>
+          <div class="profile-item"><div class="label">Last identity review</div><div class="value">{{ profile.reviewed_at|date:'d M Y'|default:'Not reviewed yet' }}</div></div>
+        </div>
+        <hr class="thin-divider">
+        <div class="ui-note"><svg class="icon"><use href="#i-info"></use></svg><span>Changing your name, department or date of birth sends your identity back for administrator review. Email and institutional ID are not editable here.</span></div>
+      </div>
+    </section>
+    <section class="ui-panel">
+      <div class="panel-head"><div><h2>Your verification journey</h2><p>Three stages in the voter onboarding process</p></div></div>
+      <div class="panel-body"><div class="timeline">
+        <div class="timeline-item"><span class="timeline-step done"><svg class="icon"><use href="#i-check"></use></svg></span><div><strong>Account registered</strong><p>Your voter account has been created.</p></div></div>
+        <div class="timeline-item"><span class="timeline-step {% if profile and profile.identity_approved %}done{% else %}current{% endif %}">{% if profile and profile.identity_approved %}<svg class="icon"><use href="#i-check"></use></svg>{% else %}2{% endif %}</span><div><strong>Identity review</strong><p>{% if profile and profile.identity_approved %}Your identity has been approved.{% elif profile and profile.verification_status == 'REJECTED' %}Your review was rejected. Check with an administrator.{% else %}Awaiting administrator verification.{% endif %}</p></div></div>
+        <div class="timeline-item"><span class="timeline-step">3</span><div><strong>Election participation</strong><p>Available in Module 2 after age, identity and election-specific checks.</p></div></div>
+      </div></div>
+    </section>
+  </div>
+  <div class="stacked-panels">
+    <section class="ui-panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Manage your account without leaving the dashboard</p></div></div><div class="panel-body"><div class="action-list">
+      {% if profile and user.role == 'VOTER' %}<a class="quick-action" href="{% url 'accounts:edit_profile' %}"><span class="action-icon"><svg class="icon"><use href="#i-edit"></use></svg></span><span class="action-content"><strong>Update profile</strong><small>Change your name, department or birth date</small></span><svg class="icon"><use href="#i-chevron-right"></use></svg></a>{% endif %}
+      <a class="quick-action" href="{% url 'accounts:password_change' %}"><span class="action-icon"><svg class="icon"><use href="#i-key"></use></svg></span><span class="action-content"><strong>Change password</strong><small>Secure your account with a new password</small></span><svg class="icon"><use href="#i-chevron-right"></use></svg></a>
+      <a class="quick-action" href="#my-profile"><span class="action-icon"><svg class="icon"><use href="#i-id"></use></svg></span><span class="action-content"><strong>View personal details</strong><small>Check your registered information</small></span><svg class="icon"><use href="#i-chevron-right"></use></svg></a>
+    </div></div></section>
+    <section class="ui-panel"><div class="panel-head"><div><h2>What's next?</h2><p>Features planned for Election & Voting Management</p></div><span class="pill pill-indigo">Module 2</span></div><div class="panel-body"><div class="action-list">
+      <div class="quick-action is-disabled"><span class="action-icon"><svg class="icon"><use href="#i-calendar"></use></svg></span><span class="action-content"><strong>Browse elections</strong><small>Explore upcoming election schedules</small></span><span class="pill pill-muted">Soon</span></div>
+      <div class="quick-action is-disabled"><span class="action-icon"><svg class="icon"><use href="#i-users"></use></svg></span><span class="action-content"><strong>View candidates</strong><small>See candidate information before voting</small></span><span class="pill pill-muted">Soon</span></div>
+      <div class="quick-action is-disabled"><span class="action-icon"><svg class="icon"><use href="#i-vote"></use></svg></span><span class="action-content"><strong>Cast a secure vote</strong><small>One authorized ballot per election</small></span><span class="pill pill-muted">Soon</span></div>
+    </div></div></section>
+    <div class="ui-note success"><svg class="icon"><use href="#i-shield"></use></svg><span><strong>Privacy first.</strong> Your identity approval does not reveal your voting choice. Encrypted vote storage will be introduced in a later module.</span></div>
+  </div>
+</div>
+{% endblock %}

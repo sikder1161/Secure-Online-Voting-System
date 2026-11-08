@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Security events | Secure Voting System{% endblock %}
+{% block topbar_title %}Security monitoring{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">MODULE 1 / SECURITY HARDENING</div><h1 class="page-title">Security event overview</h1><p class="page-subtitle">Review recent authentication, account changes and access-control events. Counts reflect actual stored events.</p></div></div>
+<div class="kpi-grid" style="margin-bottom:24px">
+  <div class="kpi"><div class="kpi-label">Failed logins · 7 days</div><div class="kpi-value">{{ failed_logins }}</div><div class="kpi-desc">Invalid credentials detected</div></div>
+  <div class="kpi"><div class="kpi-label">Failed MFA · 7 days</div><div class="kpi-value">{{ failed_mfa }}</div><div class="kpi-desc">Email OTP challenges rejected</div></div>
+  <div class="kpi"><div class="kpi-label">Access denied · 7 days</div><div class="kpi-value">{{ denied_access }}</div><div class="kpi-desc">Restricted routes attempted</div></div>
+  <div class="kpi"><div class="kpi-label">Voter approvals · 7 days</div><div class="kpi-value">{{ approved_events }}</div><div class="kpi-desc">Recorded review decisions</div></div>
+</div>
+<section class="ui-panel"><div class="panel-head"><div><h2>Recent security events</h2><p>Newest 50 records, without passwords, OTP values or ballot selections</p></div><span class="pill pill-indigo">Staff only</span></div>
+  <div class="table-responsive"><table class="table ui-table"><thead><tr><th>Time</th><th>Event</th><th>Account</th><th>Target user</th><th>Source IP</th></tr></thead>
+  <tbody>{% for event in recent_events %}<tr>
+    <td>{{ event.created_at|date:'d M Y, H:i:s' }}</td>
+    <td><span class="pill {% if event.event_type == 'LOGIN_FAILURE' or event.event_type == 'MFA_FAILURE' or event.event_type == 'ACCESS_DENIED' %}pill-danger{% else %}pill-indigo{% endif %}">{{ event.get_event_type_display }}</span></td>
+    <td>{{ event.actor.username|default:'Unknown / unauthenticated' }}</td>
+    <td>{{ event.target_user.username|default:'-' }}</td>
+    <td>{{ event.ip_address|default:'-' }}</td>
+  </tr>{% empty %}<tr><td colspan="5">No security events have been recorded yet.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+<div class="ui-note warning mt-4"><span>These records are basic operational logs, not yet cryptographically tamper-evident. Audit signing, trusted key storage and independent verification belong to Module 3.</span></div>
+{% endblock %}

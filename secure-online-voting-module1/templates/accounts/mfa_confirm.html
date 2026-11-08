@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Confirm admin authenticator | Secure Voting System{% endblock %}
+{% block topbar_title %}Administrator security{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">SECURITY / ONE-TIME SETUP</div><h1 class="page-title">Connect your authenticator</h1><p class="page-subtitle">Scan this QR code in your authenticator app, then enter the current code.</p></div></div>
+<div class="dashboard-two-col">
+  <section class="ui-panel"><div class="panel-head"><div><h2>Step 2 · Scan QR code</h2><p>This image is generated locally by Django. No third-party QR service is contacted.</p></div></div>
+    <div class="panel-body">
+      <img src="{{ qr_data }}" alt="Personal authenticator QR code" width="230" height="230" style="max-width:100%;background:white;border:1px solid #e3e8f0;border-radius:16px;padding:12px">
+      <p class="mt-3" style="color:#59677a">If scanning fails, enter this secret manually in your app:</p>
+      <code style="display:block;max-width:100%;overflow-wrap:anywhere;background:#f3f6ff;padding:12px;border-radius:12px">{{ manual_secret }}</code>
+      <p class="mt-3" style="font-size:12px;color:#697991">Keep this screen private. The secret is stored encrypted at rest.</p>
+    </div>
+  </section>
+  <section class="ui-panel"><div class="panel-head"><div><h2>Step 3 · Verify code</h2><p>The one-time code updates approximately every 30 seconds.</p></div></div>
+    <div class="panel-body"><form method="post" class="ui-form" autocomplete="off">{% csrf_token %}
+      <label for="mfa_code">Authenticator code</label>
+      <input id="mfa_code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus>
+      <div class="form-actions"><button class="ui-btn ui-btn-primary" type="submit">Enable MFA and continue</button></div>
+    </form></div>
+  </section>
+</div>
+{% endblock %}

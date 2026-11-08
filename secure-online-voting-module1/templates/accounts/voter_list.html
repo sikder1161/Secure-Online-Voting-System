@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load email_privacy %}
+{% block title %}Voter review queue | Secure Voting System{% endblock %}
+{% block topbar_title %}Voter verification{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">Administrator / Identity review</div><h1 class="page-title">Voter review queue</h1><p class="page-subtitle">Review registrations, date of birth and institutional details before making an approval decision.</p></div><a class="ui-btn ui-btn-outline" href="{% url 'accounts:dashboard' %}"><svg class="icon"><use href="#i-arrow-left"></use></svg> Back to overview</a></div>
+<nav class="filter-bar" aria-label="Filter voter records">
+  <a href="?status=PENDING" class="filter-pill {% if status_filter == 'PENDING' %}active{% endif %}"><svg class="icon"><use href="#i-clock"></use></svg> Pending</a>
+  <a href="?status=APPROVED" class="filter-pill {% if status_filter == 'APPROVED' %}active{% endif %}"><svg class="icon"><use href="#i-circle-check"></use></svg> Approved</a>
+  <a href="?status=REJECTED" class="filter-pill {% if status_filter == 'REJECTED' %}active{% endif %}"><svg class="icon"><use href="#i-x"></use></svg> Rejected</a>
+  <a href="?status=ALL" class="filter-pill {% if status_filter == 'ALL' %}active{% endif %}"><svg class="icon"><use href="#i-list"></use></svg> All records</a>
+</nav>
+<section class="ui-panel" aria-labelledby="review-table-title">
+  <div class="panel-head"><div><h2 id="review-table-title">{% if status_filter == 'PENDING' %}Pending applications{% elif status_filter == 'APPROVED' %}Approved voters{% elif status_filter == 'REJECTED' %}Rejected applications{% else %}All registered voters{% endif %}</h2><p>Only authorized staff can access this list</p></div><span class="pill pill-indigo">{{ profiles|length }} shown</span></div>
+  <div class="table-responsive"><table class="table ui-table"><thead><tr><th scope="col">Voter</th><th scope="col">Institutional ID</th><th scope="col">Date of birth</th><th scope="col">Review status</th><th scope="col">Action</th></tr></thead><tbody>
+    {% for profile in profiles %}<tr>
+      <td><div class="table-person"><span class="person-avatar">{{ profile.user.first_name|default:profile.user.username|slice:':1'|upper }}</span><div class="person-info"><strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong><span>{{ profile.user.email|mask_email }}</span></div></div></td>
+      <td><div class="table-strong">{{ profile.institutional_id }}</div><div class="table-meta">{{ profile.department|default:'No department' }}</div></td>
+      <td><div class="table-strong">{{ profile.date_of_birth|date:'d M Y'|default:'Not provided' }}</div><div class="mt-1">{% if profile.meets_age_requirement %}<span class="pill pill-success">Age 18+ met</span>{% elif profile.date_of_birth %}<span class="pill pill-danger">Under 18</span>{% else %}<span class="pill pill-warning">DOB missing</span>{% endif %}</div></td>
+      <td>{% if profile.verification_status == 'APPROVED' %}<span class="pill pill-success"><svg class="icon"><use href="#i-check"></use></svg> Approved</span>{% elif profile.verification_status == 'REJECTED' %}<span class="pill pill-danger">Rejected</span>{% else %}<span class="pill pill-warning"><svg class="icon"><use href="#i-clock"></use></svg> Pending</span>{% endif %}</td>
+      <td><div class="review-actions"><form method="post" action="{% url 'accounts:review_voter' profile.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="APPROVED"><button type="submit" class="ui-btn ui-btn-primary" {% if not profile.meets_age_requirement %}disabled title="A verified birth date and minimum age of 18 are required"{% endif %}>Approve</button></form><form method="post" action="{% url 'accounts:review_voter' profile.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="REJECTED"><button type="submit" class="ui-btn ui-btn-danger">Reject</button></form></div></td>
+    </tr>{% empty %}<tr><td colspan="5"><div class="empty-state"><span class="empty-icon"><svg class="icon"><use href="#i-circle-check"></use></svg></span><strong>No voter records here</strong>Try another status filter, or check again after new registrations.</div></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<div class="ui-note warning mt-4"><svg class="icon"><use href="#i-alert"></use></svg><span>Only approve identities after verifying their institutional details. The system prevents approval when the date of birth is missing or the voter is under 18.</span></div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Sign in | Secure Voting System{% endblock %}
+{% block auth_content %}
+<div class="auth-card">
+  <section class="auth-visual" aria-label="About the voter portal">
+    <div>
+      <div class="auth-visual-label">SECURE VOTING SYSTEM / MODULE 1</div>
+      <h2>One secure place for your voter identity.</h2>
+      <p>Register, manage your details, and follow your identity verification status in a clear, organized workspace.</p>
+      <div class="auth-feature-list">
+        <div class="auth-feature"><svg class="icon"><use href="#i-shield"></use></svg> Identity review by administrators</div>
+        <div class="auth-feature"><svg class="icon"><use href="#i-calendar"></use></svg> 18+ voting eligibility rule</div>
+        <div class="auth-feature"><svg class="icon"><use href="#i-lock"></use></svg> Email OTP for every login and role-based access</div>
+      </div>
+    </div>
+    <div class="auth-proof"><svg class="icon"><use href="#i-info"></use></svg><span>Election creation and secure vote casting will be added in Module 2. This screen manages account access only.</span></div>
+  </section>
+  <section class="auth-form-panel">
+    <div class="eyebrow">WELCOME BACK</div>
+    <div class="form-intro"><h1>Sign in to your account</h1><p>Enter your password. We will then email you a one-time login code.</p></div>
+    {% if form.errors %}<div class="ui-note danger mb-3" role="alert"><svg class="icon"><use href="#i-alert"></use></svg><span>The username or password is incorrect. Please try again.</span></div>{% endif %}
+    {% if next and user.is_authenticated %}<div class="ui-note warning mb-3" role="alert"><svg class="icon"><use href="#i-alert"></use></svg><span>Your account does not have permission to open that page.</span></div>{% endif %}
+    <form method="post" class="form-fields" novalidate>
+      {% csrf_token %}
+      <div class="mb-4"><label for="id_username">Username</label><input id="id_username" name="username" type="text" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" placeholder="Enter your username" required autofocus></div>
+      <div class="mb-4"><label for="id_password">Password</label><input id="id_password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required></div>
+      <input type="hidden" name="next" value="{{ next|default:'' }}">
+      <button class="ui-btn ui-btn-primary auth-primary" type="submit">Sign in <svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+    </form>
+    <div class="auth-bottom"><a href="{% url 'accounts:password_reset' %}">Forgot your password?</a></div>
+    <div class="auth-bottom">New to the system? <a href="{% url 'accounts:register' %}">Create a voter account</a></div>
+  </section>
+</div>
+{% endblock %}

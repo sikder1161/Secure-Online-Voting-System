@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load email_privacy %}
+{% block title %}Email code verification | Secure Voting System{% endblock %}
+{% block auth_content %}
+<div class="auth-card">
+  <section class="auth-visual" aria-label="Email security verification">
+    <div>
+      <div class="auth-visual-label">SECURE VOTING SYSTEM / EMAIL SECURITY</div>
+      <h2>One more step to protect your account.</h2>
+      <p>We use short-lived email codes to protect voter and administrator access.</p>
+      <div class="auth-feature-list">
+        <div class="auth-feature">&#10003; One-time code, valid for 5 minutes</div>
+        <div class="auth-feature">&#10003; Limited verification attempts</div>
+        <div class="auth-feature">&#10003; Your password is never sent by email</div>
+      </div>
+    </div>
+    <div class="auth-proof">Never share your email code. Nobody from Secure Voting System should ask you for it.</div>
+  </section>
+  <section class="auth-form-panel">
+    <div class="eyebrow">{% if purpose == 'VERIFY' %}VERIFY EMAIL ADDRESS{% else %}LOGIN VERIFICATION{% endif %}</div>
+    <div class="form-intro">
+      <h1>Enter your email code</h1>
+      <p>We sent a six-digit code to <strong>{{ email|mask_email }}</strong>.</p>
+    </div>
+    <form method="post" class="form-fields">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label for="id_code">6-digit verification code</label>
+        <input class="form-control" id="id_code" type="text" name="code" inputmode="numeric"
+               pattern="[0-9]{6}" maxlength="6" minlength="6" autocomplete="one-time-code"
+               placeholder="000000" required autofocus>
+      </div>
+      <button class="ui-btn ui-btn-primary auth-primary" type="submit">Verify code</button>
+    </form>
+    <div class="auth-bottom">
+      <form action="{{ resend_url }}" method="post" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="ui-btn" style="margin-top:12px">Resend code (after 60 seconds)</button>
+      </form>
+      <p style="margin-top:14px"><a href="{% url 'accounts:login' %}">Back to sign in</a></p>
+    </div>
+  </section>
+</div>
+{% endblock %}

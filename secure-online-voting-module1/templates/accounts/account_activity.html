@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Account activity | Secure Voting System{% endblock %}
+{% block topbar_title %}Account activity{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">MODULE 1 / ACCOUNT SECURITY</div><h1 class="page-title">Your account activity</h1><p class="page-subtitle">Review authentication and security actions recorded for your account. Times are shown in your configured timezone.</p></div><a class="ui-btn ui-btn-outline" href="{% url 'accounts:password_change' %}">Change password</a></div>
+<div class="kpi-grid" style="margin-bottom:24px">
+  <div class="kpi"><div class="kpi-label">Last successful sign-in</div><div class="kpi-value" style="font-size:19px">{% if last_success %}{{ last_success.created_at|date:'d M Y' }}{% else %}Not yet recorded{% endif %}</div><div class="kpi-desc">{% if last_success %}{{ last_success.created_at|date:'H:i' }} · {{ last_success.device_summary|default:'Unknown browser' }}{% else %}Sign in records will appear here{% endif %}</div></div>
+  <div class="kpi"><div class="kpi-label">Failed authentication events</div><div class="kpi-value">{{ recent_failures }}</div><div class="kpi-desc">Recorded since tracking began</div></div>
+  <div class="kpi"><div class="kpi-label">Protection</div><div class="kpi-value" style="font-size:20px">Email OTP</div><div class="kpi-desc">Required on new sign-ins</div></div>
+</div>
+<section class="ui-panel"><div class="panel-head"><div><h2>Recent activity</h2><p>Up to 40 recent records; password, reset tokens and OTP codes are never displayed</p></div><span class="pill pill-indigo">Private to your account</span></div>
+<div class="table-responsive"><table class="table ui-table"><thead><tr><th>When</th><th>Action</th><th>Browser / platform</th><th>IP address</th></tr></thead>
+<tbody>{% for event in events %}<tr><td>{{ event.created_at|date:'d M Y, H:i' }}</td><td><span class="pill {% if event.event_type == 'LOGIN_FAILURE' or event.event_type == 'MFA_FAILURE' or event.event_type == 'ACCESS_DENIED' %}pill-danger{% else %}pill-indigo{% endif %}">{{ event.get_event_type_display }}</span></td><td>{{ event.device_summary|default:'Not recorded' }}</td><td>{{ event.ip_address|default:'Not recorded' }}</td></tr>
+{% empty %}<tr><td colspan="4">No account activity has been recorded yet.</td></tr>{% endfor %}</tbody></table></div></section>
+<div class="ui-note warning mt-4"><span>Browser and network changes can trigger a “new sign-in context” notice even on your own device. These are basic activity records, not cryptographically tamper-proof audit logs. If you see unfamiliar activity, reset your password immediately.</span></div>
+{% endblock %}

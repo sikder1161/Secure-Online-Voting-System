@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Enable administrator MFA | Secure Voting System{% endblock %}
+{% block topbar_title %}Administrator security{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="eyebrow">SECURITY / REQUIRED SETUP</div><h1 class="page-title">Protect your admin account</h1><p class="page-subtitle">Two-factor authentication is required before you can manage voters or use Django Admin.</p></div></div>
+<section class="ui-panel" style="max-width:680px">
+  <div class="panel-head"><div><h2>Step 1 · Confirm your password</h2><p>Use Google Authenticator, Microsoft Authenticator or another TOTP app.</p></div><span class="pill pill-warning">Required</span></div>
+  <div class="panel-body"><div class="ui-note warning mb-4"><span>After entering your password, you will scan a local QR code and enter a 6-digit authenticator code. Never share your QR code or secret.</span></div>
+    <form method="post" autocomplete="off" class="ui-form">{% csrf_token %}
+      <label for="mfa_password">Current administrator password</label>
+      <input id="mfa_password" name="password" type="password" required autocomplete="current-password" autofocus>
+      <div class="form-actions"><button class="ui-btn ui-btn-primary" type="submit">Continue to authenticator setup</button></div>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,9 @@
+Django>=5.2,<5.3
+python-dotenv>=1.0,<2.0
+dj-database-url>=2.3,<4.0
+psycopg[binary]>=3.2,<4.0
+
+# Security hardening, login lockout, Argon2 (Django 5.2 / Python 3.11+)
+django-axes[ipware]>=9.0,<10.0
+cryptography>=44,<47
+argon2-cffi>=23.1,<26
