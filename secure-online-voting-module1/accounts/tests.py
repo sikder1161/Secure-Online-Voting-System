@@ -131,3 +131,55 @@ class Module1EmailFlowTests(TestCase):
         self.assertRedirects(r, reverse("accounts:login"))
         r = self.client.post(reverse("admin:login"), {"username": "admin", "password": self.password})
         self.assertRedirects(r, reverse("accounts:login"))
+# FR3 - Voter Eligibility Verification Tests
+
+class VoterEligibilityFR3Tests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="fr3_test_voter",
+            email="fr3@example.com",
+            password="SecureTestPassword123!"
+        )
+
+        self.profile, created = VoterProfile.objects.get_or_create(
+            user=self.user,
+            defaults={
+                "institutional_id": "FR3-1001",
+                "date_of_birth": date(2000, 1, 1),
+            }
+        )
+
+        self.profile.date_of_birth = date(2000, 1, 1)
+        self.profile.verification_status = "PENDING"
+        self.profile.save()
+
+    def test_18_year_age_requirement(self):
+        self.assertFalse(
+            self.profile.meets_age_requirement(
+                date(2017, 12, 31)
+            )
+        )
+
+        self.assertTrue(
+            self.profile.meets_age_requirement(
+                date(2018, 1, 1)
+            )
+        )
+
+    def test_pending_and_rejected_voter_not_approved(self):
+        self.assertFalse(self.profile.identity_approved)
+
+        self.profile.verification_status = "REJECTED"
+        self.profile.save()
+
+        self.assertFalse(self.profile.identity_approved)
+
+    def test_inactive_voter_not_approved(self):
+        self.profile.verification_status = "APPROVED"
+        self.profile.save()
+
+        self.user.is_active = False
+        self.user.save(update_fields=["is_active"])
+
+        self.assertFalse(self.profile.identity_approved)
