@@ -94,3 +94,40 @@ class Module1EmailFlowTests(TestCase):
         self.assertEqual(len(mail.outbox), n)
 
     def test_underage_voter_cannot_be_approved(self):
+        from django.utils import timezone
+        today = timezone.localdate()
+        dob = date(today.year - 17, today.month, min(today.day, 28))
+        voter = self.register_and_verify(dob=dob.isoformat())
+        admin = User.objects.create_superuser(username="admin", email="admin@example.com", password=self.password)
+        EmailVerification.objects.create(user=admin, verified_email=admin.email, verified_at=timezone.now())
+        self.login_with_otp(username="admin")
+        res = self.client.post(reverse("accounts:review_voter", args=[voter.voter_profile.pk]), {"decision": "APPROVED"})
+        self.assertRedirects(res, reverse("accounts:voter_list"))
+        voter.voter_profile.refresh_from_db()
+        self.assertNotEqual(voter.voter_profile.verification_status, "APPROVED")
+
+    def test_voter_cannot_access_staff_routes(self):
+        voter = self.register_and_verify()
+        self.login_with_otp()
+        self.assertEqual(self.client.get(reverse("accounts:voter_list")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("accounts:security_dashboard")).status_code, 403)
+
+    def test_unverified_voter_is_not_eligible_even_if_previous_admin_approved(self):
+        user = User.objects.create_user(username="student1", email="student1@example.com", password=self.password)
+        profile = VoterProfile.objects.create(user=user, institutional_id="UNI-1001", date_of_birth=date(2000, 1, 1), verification_status="APPROVED")
+        self.assertFalse(profile.can_vote)
+
+    def test_direct_force_login_cannot_bypass_email_otp(self):
+        user = User.objects.create_user(username="student1", email="student1@example.com", password=self.password)
+        from django.utils import timezone
+        EmailVerification.objects.create(user=user, verified_email=user.email, verified_at=timezone.now())
+        self.client.force_login(user)
+        r = self.client.get(reverse("accounts:dashboard"))
+        self.assertRedirects(r, reverse("accounts:login"))
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_builtin_django_admin_login_does_not_bypass_email_otp(self):
+        r = self.client.get(reverse("admin:login"))
+        self.assertRedirects(r, reverse("accounts:login"))
+        r = self.client.post(reverse("admin:login"), {"username": "admin", "password": self.password})
+        self.assertRedirects(r, reverse("accounts:login"))
