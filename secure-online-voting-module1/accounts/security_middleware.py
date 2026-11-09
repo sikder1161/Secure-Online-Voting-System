@@ -3,10 +3,12 @@
 Old pre-upgrade sessions are invalidated once, on their first next request.
 """
 from django.contrib.auth import logout
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
 
 from .email_otp import email_login_passed
+from .models import User
 
 
 class EmailMFAMiddleware:
@@ -20,6 +22,17 @@ class EmailMFAMiddleware:
                 if request.user.is_authenticated:
                     logout(request)
                 return redirect("accounts:login")
+            if request.user.role == User.Role.VOTER or not (
+                request.user.is_superuser
+                or (
+                    request.user.is_staff
+                    and request.user.role in {
+                        User.Role.SYSTEM_ADMIN,
+                        User.Role.ELECTION_ADMIN,
+                    }
+                )
+            ):
+                return HttpResponseForbidden("You are not authorized to access the admin site.")
         if request.user.is_authenticated and not email_login_passed(request):
             logout(request)
             return redirect("accounts:login")

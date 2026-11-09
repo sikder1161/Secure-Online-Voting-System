@@ -24,9 +24,16 @@ class AllRolesEmailSecurityTests(TestCase):
         return admin
 
     def login_admin(self):
-        self.client.post(reverse("accounts:login"), {"username": "admin", "password": self.password})
+        return self.login_with_otp("admin")
+
+    def login_with_otp(self, username):
+        response = self.client.post(reverse("accounts:login"), {
+            "username": username, "password": self.password,
+        })
+        self.assertRedirects(response, reverse("accounts:verify_login_email"))
         code = re.search(r"\b\d{6}\b", mail.outbox[-1].body).group(0)
-        self.client.post(reverse("accounts:verify_login_email"), {"code": code})
+        response = self.client.post(reverse("accounts:verify_login_email"), {"code": code})
+        self.assertRedirects(response, reverse("accounts:dashboard"))
         return code
 
     def test_admin_cannot_open_dashboard_until_email_code_verified(self):
@@ -38,6 +45,37 @@ class AllRolesEmailSecurityTests(TestCase):
         code = re.search(r"\b\d{6}\b", mail.outbox[-1].body).group(0)
         self.client.post(reverse("accounts:verify_login_email"), {"code": code})
         self.assertEqual(self.client.get(reverse("accounts:dashboard")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+
+    def test_staff_flagged_voter_cannot_access_admin_after_email_otp(self):
+        voter = User.objects.create_user(
+            username="staff-voter",
+            email="staff-voter@example.com",
+            password=self.password,
+            is_staff=True,
+        )
+        EmailVerification.objects.create(
+            user=voter, verified_email=voter.email, verified_at=timezone.now()
+        )
+
+        self.login_with_otp("staff-voter")
+
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 403)
+
+    def test_election_admin_can_access_admin_after_email_otp(self):
+        admin = User.objects.create_user(
+            username="election-admin",
+            email="election-admin@example.com",
+            password=self.password,
+            role=User.Role.ELECTION_ADMIN,
+            is_staff=True,
+        )
+        EmailVerification.objects.create(
+            user=admin, verified_email=admin.email, verified_at=timezone.now()
+        )
+
+        self.login_with_otp("election-admin")
+
         self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
 
     def test_email_change_revokes_existing_verified_session(self):
