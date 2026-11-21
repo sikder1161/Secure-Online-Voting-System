@@ -1,0 +1,2 @@
+{% extends 'base.html' %}{% block title %}Vote received | SecureVote{% endblock %}
+{% block content %}<div class="card p-5"><h2>Vote recorded</h2><p>Your encrypted ballot was accepted for <strong>{{ election.title }}</strong>.</p><p class="text-muted">For privacy, this confirmation does not display your selected candidate.</p><a href="{% url 'elections:list' %}">Return to elections</a></div>{% endblock %}

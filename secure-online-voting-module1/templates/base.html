@@ -38,9 +38,39 @@
       </nav>
       <div class="side-section-label section-spaced">ELECTIONS <span class="mini-text">MODULE 2</span></div>
       <nav class="side-nav" aria-label="Upcoming modules">
-        <span class="side-link is-soon" aria-disabled="true"><svg class="icon"><use href="#i-vote"></use></svg><span>Elections</span><small>Soon</small></span>
-        <span class="side-link is-soon" aria-disabled="true"><svg class="icon"><use href="#i-users"></use></svg><span>Candidates</span><small>Soon</small></span>
-        <span class="side-link is-soon" aria-disabled="true"><svg class="icon"><use href="#i-chart"></use></svg><span>Results</span><small>Soon</small></span>
+        
+{% if request.user.role == 'ELECTION_ADMIN' %}
+
+<a class="nav-link" href="{% url 'elections:list' %}">
+    <svg class="icon"><use href="#i-vote"></use></svg>
+    <span>Manage Elections</span>
+</a>
+
+<a class="nav-link" href="{% url 'elections:create' %}">
+    <svg class="icon"><use href="#i-vote"></use></svg>
+    <span>Create Election</span>
+</a>
+
+<a class="nav-link" href="{% url 'elections:list' %}">
+    <svg class="icon"><use href="#i-users"></use></svg>
+    <span>Manage Candidates</span>
+</a>
+
+{% else %}
+
+<a class="nav-link" href="{% url 'elections:list' %}">
+    <svg class="icon"><use href="#i-vote"></use></svg>
+    <span>Available Elections</span>
+</a>
+
+{% endif %}
+
+<a class="nav-link disabled" aria-disabled="true">
+    <svg class="icon"><use href="#i-chart"></use></svg>
+    <span>Results</span>
+    <small>Soon</small>
+</a>
+
       </nav>
       <div class="side-section-label section-spaced">ACCOUNT</div>
       <nav class="side-nav" aria-label="Account">
