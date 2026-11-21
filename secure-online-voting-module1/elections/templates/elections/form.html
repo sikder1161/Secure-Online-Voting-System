@@ -1,0 +1,2 @@
+{% extends 'base.html' %}{% block title %}{{ heading }} | SecureVote{% endblock %}
+{% block content %}<div class="card p-4"><h2>{{ heading }}</h2><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Save</button> <a class="btn btn-outline-secondary" href="{% url 'elections:list' %}">Cancel</a></form></div>{% endblock %}

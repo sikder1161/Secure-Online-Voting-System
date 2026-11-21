@@ -22,6 +22,7 @@ if os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS"):
     CSRF_TRUSTED_ORIGINS += [x.strip() for x in os.environ["DJANGO_CSRF_TRUSTED_ORIGINS"].split(",") if x.strip()]
 
 INSTALLED_APPS = [
+    "elections",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
